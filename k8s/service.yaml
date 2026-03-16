@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: dbdocs-viewer-service
+  namespace: fpaasrequirementdefinition-2038
+spec:
+  selector:
+    app: dbdocs-viewer
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80

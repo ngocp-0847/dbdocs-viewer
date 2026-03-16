@@ -1,0 +1,33 @@
+apiVersion: k8s.nginx.org/v1
+kind: VirtualServer
+metadata:
+  name: fpaas-vs
+  namespace: fpaasrequirementdefinition-2038
+spec:
+  host: project2038.sun-asterisk.vn
+  tls:
+    secret: fpaas-tls-secret
+  upstreams:
+    - name: backend
+      service: sbi-fpaas-be-service
+      port: 80
+    - name: ekyc-server
+      service: ekyc-server-service
+      port: 80
+    - name: dbdocs
+      service: dbdocs-viewer-service
+      port: 80
+  routes:
+    - path: ~ ^/mock-ekyc(/.*)?$
+      action:
+        proxy:
+          upstream: ekyc-server
+          rewritePath: $1
+    - path: ~ ^/dbdocs(/.*)?$
+      action:
+        proxy:
+          upstream: dbdocs
+          rewritePath: /$1
+    - path: /
+      action:
+        pass: backend
