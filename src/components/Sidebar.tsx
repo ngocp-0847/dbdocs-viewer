@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { Search, Table2, ChevronDown, ChevronRight } from "lucide-react";
+import { getTableDotClass } from "../lib/table-colors";
 import type { SchemaTable } from "../types/schema";
 
 interface SidebarProps {
@@ -55,6 +56,9 @@ export default function Sidebar({ tables, selectedTable, onSelectTable }: Sideba
                   : "text-gray-700 hover:bg-gray-200"
               }`}
             >
+              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                selectedTable === table.name ? "bg-white" : getTableDotClass(table.name)
+              }`} />
               <Table2 className="w-4 h-4 flex-shrink-0" />
               <span className="truncate font-mono text-xs">{table.name}</span>
             </button>

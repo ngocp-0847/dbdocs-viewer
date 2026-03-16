@@ -1,19 +1,25 @@
 import dagre from "dagre";
 import type { Node, Edge } from "@xyflow/react";
 
-const NODE_WIDTH = 280;
-const FIELD_HEIGHT = 28;
+const NODE_WIDTH = 260;
+const FIELD_HEIGHT = 26;
 const HEADER_HEIGHT = 40;
 const PADDING = 20;
 
 export function getLayoutedElements(
   nodes: Node[],
   edges: Edge[],
-  direction: "TB" | "LR" = "LR"
+  direction: "TB" | "LR" = "TB"
 ): { nodes: Node[]; edges: Edge[] } {
   const g = new dagre.graphlib.Graph();
   g.setDefaultEdgeLabel(() => ({}));
-  g.setGraph({ rankdir: direction, nodesep: 80, ranksep: 120, edgesep: 30 });
+  g.setGraph({
+    rankdir: direction,
+    nodesep: 120,
+    ranksep: 180,
+    edgesep: 30,
+    align: "UL",
+  });
 
   nodes.forEach((node) => {
     const fieldCount = (node.data as { fields: unknown[] }).fields?.length ?? 5;

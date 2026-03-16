@@ -14,9 +14,11 @@ import {
   Handle,
   Position,
   Panel,
+  MarkerType,
 } from "@xyflow/react";
 import { KeyRound, ZoomIn, ZoomOut, Maximize2, Minimize2, Move, MousePointer2, Maximize } from "lucide-react";
 import { getLayoutedElements } from "../lib/diagram-layout";
+import { getTableHeaderHex, getEdgeColor } from "../lib/table-colors";
 import type { ParsedSchema } from "../types/schema";
 
 interface TableNodeData {
@@ -28,22 +30,27 @@ interface TableNodeData {
 
 function TableNode({ data }: NodeProps<Node<TableNodeData>>) {
   const d = data as TableNodeData;
+  const headerColor = getTableHeaderHex(d.label);
   return (
     <div
-      className={`bg-white border rounded-lg shadow-md min-w-[200px] overflow-hidden ${
+      className={`bg-white border rounded-lg shadow-md min-w-[240px] overflow-hidden ${
         d.isMain ? "border-blue-500 ring-2 ring-blue-200" : "border-[#E5E7EB]"
       }`}
     >
       <div
-        className={`px-3 py-2 text-xs font-semibold text-white ${
-          d.isMain ? "bg-blue-500" : "bg-[#1E293B]"
-        }`}
+        className="px-3 py-2 text-xs font-semibold text-white"
+        style={{ backgroundColor: d.isMain ? headerColor : headerColor }}
       >
         {d.label}
       </div>
       <div className="divide-y divide-[#E5E7EB]">
         {d.fields.map((field) => (
-          <div key={field.name} className="flex items-center gap-1.5 px-3 py-1 text-[11px]">
+          <div
+            key={field.name}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-[12px] ${
+              field.pk ? "bg-yellow-50" : field.fk ? "bg-purple-50" : ""
+            }`}
+          >
             {field.pk ? (
               <KeyRound className="w-3 h-3 text-blue-500 flex-shrink-0" />
             ) : field.fk ? (
@@ -247,12 +254,20 @@ function TableReferencesContent({ tableName, schema }: TableReferencesProps) {
         id: `ref-${i}`,
         source: ref.fromTable,
         target: ref.toTable,
+        type: "smoothstep",
+        pathOptions: { borderRadius: 8 },
         animated: false,
-        style: { stroke: "#7C3AED", strokeWidth: 1.5 },
+        style: { stroke: getEdgeColor(ref.fromTable), strokeWidth: 2 },
         label: `${ref.fromField} → ${ref.toField}`,
         labelStyle: { fontSize: 9, fill: "#6B7280" },
         labelBgStyle: { fill: "white", fillOpacity: 0.85 },
         labelBgPadding: [3, 2] as [number, number],
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          width: 12,
+          height: 12,
+          color: getEdgeColor(ref.fromTable),
+        },
       }));
 
     const layouted = getLayoutedElements(nodes, edges, "LR");
