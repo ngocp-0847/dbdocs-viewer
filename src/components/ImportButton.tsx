@@ -2,7 +2,7 @@ import { useRef } from "react";
 import { Upload } from "lucide-react";
 
 interface ImportButtonProps {
-  onImport: (content: string) => void;
+  onImport: (content: string, filename?: string) => void;
 }
 
 export default function ImportButton({ onImport }: ImportButtonProps) {
@@ -13,7 +13,7 @@ export default function ImportButton({ onImport }: ImportButtonProps) {
     reader.onload = (e) => {
       const text = e.target?.result;
       if (typeof text === "string") {
-        onImport(text);
+        onImport(text, file.name);
       }
     };
     reader.readAsText(file);

@@ -7,7 +7,7 @@ interface LayoutProps {
   projectName: string;
   activeTab: Tab;
   onTabChange: (tab: Tab) => void;
-  onImport: (content: string) => void;
+  onImport: (content: string, filename?: string) => void;
   onSaveVersion: () => void;
   hasSchema: boolean;
   sidebar: React.ReactNode;

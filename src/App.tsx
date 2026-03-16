@@ -6,6 +6,7 @@ import ERDiagram from "./components/ERDiagram";
 import Changelog from "./components/Changelog";
 import SaveVersionModal from "./components/SaveVersionModal";
 import { parseDBML } from "./lib/dbml-parser";
+import { createVersion } from "./lib/api";
 import type { ParsedSchema } from "./types/schema";
 
 // Read table name from URL hash: /dbdocs/#table=customer
@@ -31,6 +32,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>("wiki");
   const [error, setError] = useState<string | null>(null);
   const [showSaveModal, setShowSaveModal] = useState(false);
+  const [saveToast, setSaveToast] = useState<string | null>(null);
   const rawDbmlRef = useRef<string>("");
 
   // Load demo DBML on first mount
@@ -66,7 +68,12 @@ export default function App() {
     return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
 
-  const handleImport = useCallback((content: string) => {
+  const showSaveToast = useCallback((msg: string) => {
+    setSaveToast(msg);
+    setTimeout(() => setSaveToast(null), 3000);
+  }, []);
+
+  const handleImport = useCallback((content: string, filename?: string) => {
     try {
       const parsed = parseDBML(content);
       rawDbmlRef.current = content;
@@ -74,11 +81,19 @@ export default function App() {
       const first = parsed.tables[0]?.name ?? null;
       setSelectedTable(first);
       setError(null);
+
+      // Auto-save version after successful import
+      const versionName = filename
+        ? filename.replace(/\.dbml$/i, "")
+        : `Import ${new Date().toLocaleString("en-GB", { dateStyle: "short", timeStyle: "short" })}`;
+      createVersion(content, versionName)
+        .then(() => showSaveToast(`✓ Version saved: "${versionName}"`))
+        .catch(() => {}); // silently fail — user can manually save later
     } catch (e) {
       setError(`Invalid DBML: ${e instanceof Error ? e.message : "Parse error"}`);
       setTimeout(() => setError(null), 5000);
     }
-  }, []);
+  }, [showSaveToast]);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -88,7 +103,7 @@ export default function App() {
         const reader = new FileReader();
         reader.onload = (ev) => {
           const text = ev.target?.result;
-          if (typeof text === "string") handleImport(text);
+          if (typeof text === "string") handleImport(text, file.name);
         };
         reader.readAsText(file);
       }
@@ -128,6 +143,11 @@ export default function App() {
       {error && (
         <div className="fixed top-4 right-4 z-50 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg text-sm">
           {error}
+        </div>
+      )}
+      {saveToast && (
+        <div className="fixed top-4 right-4 z-50 bg-emerald-600 text-white px-4 py-2 rounded-lg shadow-lg text-sm flex items-center gap-2">
+          {saveToast}
         </div>
       )}
       <Layout
