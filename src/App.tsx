@@ -1,8 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Layout from "./components/Layout";
 import Sidebar from "./components/Sidebar";
 import TableDetail from "./components/TableDetail";
 import ERDiagram from "./components/ERDiagram";
+import Changelog from "./components/Changelog";
+import SaveVersionModal from "./components/SaveVersionModal";
 import { parseDBML } from "./lib/dbml-parser";
 import type { ParsedSchema } from "./types/schema";
 
@@ -21,17 +23,22 @@ function setTableInUrl(tableName: string | null) {
   }
 }
 
+type Tab = "wiki" | "diagram" | "changelog";
+
 export default function App() {
   const [schema, setSchema] = useState<ParsedSchema | null>(null);
   const [selectedTable, setSelectedTable] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"wiki" | "diagram">("wiki");
+  const [activeTab, setActiveTab] = useState<Tab>("wiki");
   const [error, setError] = useState<string | null>(null);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const rawDbmlRef = useRef<string>("");
 
   // Load demo DBML on first mount
   useEffect(() => {
     fetch(`${import.meta.env.BASE_URL}FPaaS_dbdiagram.dbml`)
       .then((res) => res.text())
       .then((text) => {
+        rawDbmlRef.current = text;
         const parsed = parseDBML(text);
         setSchema(parsed);
         // Restore table from URL, else default to first table
@@ -62,6 +69,7 @@ export default function App() {
   const handleImport = useCallback((content: string) => {
     try {
       const parsed = parseDBML(content);
+      rawDbmlRef.current = content;
       setSchema(parsed);
       const first = parsed.tables[0]?.name ?? null;
       setSelectedTable(first);
@@ -93,6 +101,14 @@ export default function App() {
     setActiveTab("wiki");
   }, []);
 
+  const handleChangelogImport = useCallback(
+    (content: string) => {
+      handleImport(content);
+      setActiveTab("wiki");
+    },
+    [handleImport]
+  );
+
   if (!schema) {
     return (
       <div className="h-screen flex items-center justify-center text-[#6B7280]">
@@ -119,6 +135,8 @@ export default function App() {
         activeTab={activeTab}
         onTabChange={setActiveTab}
         onImport={handleImport}
+        onSaveVersion={() => setShowSaveModal(true)}
+        hasSchema={!!schema}
         sidebar={
           <Sidebar
             tables={schema.tables}
@@ -137,7 +155,20 @@ export default function App() {
           />
         )}
         {activeTab === "diagram" && <ERDiagram schema={schema} />}
+        {activeTab === "changelog" && (
+          <Changelog onImport={handleChangelogImport} />
+        )}
       </Layout>
+
+      {showSaveModal && (
+        <SaveVersionModal
+          dbml={rawDbmlRef.current}
+          onClose={() => setShowSaveModal(false)}
+          onSaved={() => {
+            // If currently on changelog tab, it will auto-refresh
+          }}
+        />
+      )}
     </div>
   );
 }

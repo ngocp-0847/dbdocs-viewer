@@ -1,0 +1,15 @@
+version: "3.9"
+services:
+  frontend:
+    build: .
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+
+  api:
+    build: ./server
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/sbi_fpaas
+    ports:
+      - "3001:3001"

@@ -27,7 +27,7 @@ spec:
       action:
         proxy:
           upstream: dbdocs
-          rewritePath: /$1
+          rewritePath: $1
     - path: /
       action:
         pass: backend
