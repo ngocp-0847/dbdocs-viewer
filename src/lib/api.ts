@@ -38,7 +38,8 @@ export interface DiffResult {
   changes: (TableChange | RefChange)[];
 }
 
-const BASE = "/api";
+// Use BASE_URL prefix so API calls work under sub-paths like /dbdocs/
+const BASE = `${import.meta.env.BASE_URL}api`.replace(/\/+$/, "");
 
 export async function fetchVersions(): Promise<VersionSummary[]> {
   const res = await fetch(`${BASE}/versions`);
